@@ -150,12 +150,13 @@ button { font-family: inherit; cursor: pointer; }
   max-height: 560px;
   margin-inline: auto;
 }
-.circuit { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.circuit { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 1; pointer-events: none; }
 
 /* central glowing box */
 .hero-box {
   position: absolute;
   left: 27.7%; top: 11.5%; width: 44.6%; height: 67%;
+  z-index: 2;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 18px 30px;
   border-radius: 22px;
@@ -174,8 +175,11 @@ button { font-family: inherit; cursor: pointer; }
 .hero-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; justify-content: center; }
 
 /* service pills */
+.pill-field { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.pill-row { display: contents; }
 .pill {
-  position: absolute; transform: translate(-50%, -50%);
+  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%);
+  pointer-events: auto;
   display: inline-flex; align-items: center; gap: 9px;
   padding: 10px 15px; border-radius: 999px;
   background: rgba(8,40,28,.72); backdrop-filter: blur(4px);
@@ -186,6 +190,7 @@ button { font-family: inherit; cursor: pointer; }
   z-index: 3;
 }
 .pill svg { width: 17px; height: 17px; color: var(--orange-300); flex: none; }
+.pill .t-short { display: none; }
 .pill:hover {
   transform: translate(-50%, -50%) scale(1.05);
   border-color: var(--orange);
@@ -544,18 +549,40 @@ button { font-family: inherit; cursor: pointer; }
   .nav-cta-mobile { display: none; }
   .site-header.menu-open .nav-cta-mobile .btn { display: inline-flex; width: 100%; justify-content: center; }
 
-  /* hero becomes a stacked layout, circuit hidden */
-  .hero { padding: 36px 0 44px; }
-  .hero-stage { aspect-ratio: auto; max-height: none; display: flex; flex-direction: column; align-items: center; gap: 22px; }
-  .circuit { display: none; }
-  .hero-box { position: static; width: 100%; height: auto; left: auto; top: auto; padding: 30px 22px; }
-  .hero-box h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
-  .hero-box .hero-sub { max-width: none; }
-  .pill-cloud { display: flex; }
-  .pill {
-    position: static; transform: none; flex: 0 0 auto;
+  /* hero becomes a compact stacked circuit (SVG stays visible) */
+  .hero { padding: 32px 0 40px; }
+  .hero-stage {
+    aspect-ratio: auto; max-height: none;
+    display: flex; flex-direction: column; align-items: stretch; gap: 16px;
+    position: relative;
   }
-  .pill:hover { transform: scale(1.04); }
+  .circuit { display: block; }
+  .hero-box {
+    position: relative; z-index: 2; width: 100%; height: auto; left: auto; top: auto;
+    padding: 28px 20px; border-radius: 20px;
+  }
+  .hero-box h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+  .hero-box .hero-sub { max-width: none; margin-top: 12px; }
+  .hero-actions { flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+
+  .pill-field {
+    position: static; inset: auto; z-index: 3;
+    display: flex; flex-direction: column; gap: 14px; width: 100%;
+  }
+  .pill-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px 44px;
+  }
+  .pill {
+    position: static; left: auto; top: auto; transform: none;
+    width: 100%; justify-content: center; gap: 7px;
+    padding: 11px 8px; font-size: .8rem; box-shadow: 0 3px 12px rgba(0,0,0,.28);
+    white-space: normal; text-align: center; line-height: 1.15;
+  }
+  .pill svg { width: 15px; height: 15px; }
+  .pill .t-full { display: none; }
+  .pill .t-short { display: inline; }
+  .pill:hover { transform: scale(1.03); }
 
   .diff-list, .mv-grid, .locations, .field-row { grid-template-columns: 1fr; }
   .cta-strip { padding: 26px; }
@@ -573,7 +600,7 @@ button { font-family: inherit; cursor: pointer; }
   .sticky-bar svg { width: 19px; height: 19px; }
   .sticky-bar .sb-wa { color: #1faf54; border-right: 1px solid var(--line); }
   .sticky-bar .sb-inq { background: var(--orange); color: #fff; }
-  body { padding-bottom: 56px; }
+  body { padding-bottom: 64px; }
 }
 
 @media (max-width: 560px) {
@@ -587,9 +614,6 @@ button { font-family: inherit; cursor: pointer; }
   .feature { padding: 28px 22px; }
   .form-card { padding: 24px; }
 }
-
-/* pill cloud only used on mobile */
-.pill-cloud { display: none; flex-wrap: wrap; gap: 10px; justify-content: center; }
 
 /* ----- Circuit wiring animation ----------------------------------- */
 .wire-base { fill: none; stroke: url(#wireDim); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .42; }

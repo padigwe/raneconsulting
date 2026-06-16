@@ -67,50 +67,45 @@
           </div>
         </div>
 
-        <!-- service pills (desktop: positioned around box; mobile: hidden, cloud shown) -->
-        <a class="pill" style="left:12.5%;top:20.8%" href="services.html#bookkeeping">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          Bookkeeping
-        </a>
-        <a class="pill" style="left:10%;top:48.1%" href="services.html#tax-advisory">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-          Tax Advisory
-        </a>
-        <a class="pill" style="left:12.5%;top:76.5%" href="services.html#payroll">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
-          Payroll
-        </a>
-        <a class="pill" style="left:87.5%;top:20.8%" href="services.html#auditing">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Auditing
-        </a>
-        <a class="pill" style="left:90.4%;top:39.4%" href="services.html#financial-reporting">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="13" y="7" width="3" height="10"/></svg>
-          Financial Reporting
-        </a>
-        <a class="pill" style="left:89.5%;top:57.7%" href="services.html#cac-registration">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>
-          CAC Registration
-        </a>
-        <a class="pill" style="left:87%;top:76.5%" href="services.html#due-diligence">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Due Diligence
-        </a>
-        <a class="pill" style="left:50%;top:91.9%" href="services.html#software-setup">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          Accounting Software Setup
-        </a>
-
-        <!-- mobile-only pill cloud (same links) -->
-        <div class="pill-cloud">
-          <a class="pill" href="services.html#bookkeeping">Bookkeeping</a>
-          <a class="pill" href="services.html#tax-advisory">Tax Advisory</a>
-          <a class="pill" href="services.html#payroll">Payroll</a>
-          <a class="pill" href="services.html#auditing">Auditing</a>
-          <a class="pill" href="services.html#financial-reporting">Financial Reporting</a>
-          <a class="pill" href="services.html#cac-registration">CAC Registration</a>
-          <a class="pill" href="services.html#due-diligence">Due Diligence</a>
-          <a class="pill" href="services.html#software-setup">Software Setup</a>
+        <!-- service pills: desktop positions via --x/--y; mobile reflows into grids.
+             Wires are drawn by script.js from the pills' real positions. -->
+        <div class="pill-field">
+          <div class="pill-row primary">
+            <a class="pill" data-flow="green" style="--x:12.5%;--y:20.8%" href="services.html#bookkeeping">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Bookkeeping
+            </a>
+            <a class="pill" data-flow="orange" style="--x:10%;--y:48.1%" href="services.html#tax-advisory">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+              Tax Advisory
+            </a>
+            <a class="pill" data-flow="orange" style="--x:12.5%;--y:76.5%" href="services.html#payroll">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+              Payroll
+            </a>
+            <a class="pill" data-flow="green" style="--x:87.5%;--y:20.8%" href="services.html#auditing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Auditing
+            </a>
+          </div>
+          <div class="pill-row secondary">
+            <a class="pill" data-flow="green" style="--x:90.4%;--y:39.4%" href="services.html#financial-reporting">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="13" y="7" width="3" height="10"/></svg>
+              Financial Reporting
+            </a>
+            <a class="pill" data-flow="orange" style="--x:89.5%;--y:57.7%" href="services.html#cac-registration">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>
+              CAC Registration
+            </a>
+            <a class="pill" data-flow="green" style="--x:87%;--y:76.5%" href="services.html#due-diligence">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Due Diligence
+            </a>
+            <a class="pill" data-flow="orange" style="--x:50%;--y:91.9%" href="services.html#software-setup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <span class="t-full">Accounting Software Setup</span><span class="t-short">Software Setup</span>
+            </a>
+          </div>
         </div>
 
       </div>

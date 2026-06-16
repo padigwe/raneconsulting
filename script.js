@@ -39,33 +39,23 @@ const WHATSAPP_MESSAGE  = "Hello Rane Consulting, I would like to make an inquir
 
 
 /* ----- (3) HERO CIRCUIT --------------------------------------------
-   Builds the SVG connector wires between the centre box and the
-   service pills. Everything lives in a 1120 x 520 coordinate space so
-   the wires and the percentage-positioned pills stay aligned at any
-   screen size.
+   Draws the animated connector wires between the centre box and the
+   service pills. Anchors are MEASURED from the real DOM positions of
+   the pills and the box, so every pill (including Tax Advisory) stays
+   perfectly connected at any width. The SVG coordinate space is set
+   to the stage's pixel size (1 unit = 1px), so wires and pills line up
+   exactly. On mobile the same engine draws a compact central "spine"
+   with branches to each pill, keeping the circuit identity.
 -------------------------------------------------------------------- */
 (function heroCircuit() {
-  const svg = document.getElementById("circuit");
-  if (!svg) return;
-
-  // Each wire: pill anchor (near the pill) -> box edge anchor.
-  // colour alternates green / orange to match the brand.
-  const WIRES = [
-    { s: [212, 108], e: [310, 130], side: "L", colour: "green"  }, // Bookkeeping
-    { s: [188, 250], e: [310, 250], side: "L", colour: "orange" }, // Tax Advisory
-    { s: [212, 398], e: [310, 360], side: "L", colour: "orange" }, // Payroll
-    { s: [905, 108], e: [810, 122], side: "R", colour: "green"  }, // Auditing
-    { s: [920, 205], e: [810, 200], side: "R", colour: "green"  }, // Financial Reporting
-    { s: [912, 300], e: [810, 290], side: "R", colour: "orange" }, // CAC Registration
-    { s: [898, 398], e: [810, 360], side: "R", colour: "green"  }, // Due Diligence
-    { s: [560, 458], e: [560, 408], side: "B", colour: "orange" }  // Software Setup
-  ];
-
-  // --- defs (gradients + glow filter) ---
+  const svg   = document.getElementById("circuit");
+  const stage = document.querySelector(".hero-stage");
+  const box   = document.querySelector(".hero-box");
+  if (!svg || !stage || !box) return;
   const NS = "http://www.w3.org/2000/svg";
-  svg.setAttribute("viewBox", "0 0 1120 520");
-  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  svg.innerHTML = `
+  const pills = [...stage.querySelectorAll(".pill")];
+
+  const DEFS = `
     <defs>
       <linearGradient id="wireDim" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#1a7a47"/>
@@ -87,64 +77,176 @@ const WHATSAPP_MESSAGE  = "Hello Rane Consulting, I would like to make an inquir
       </filter>
     </defs>`;
 
-  // rounded orthogonal path through a list of [x,y] waypoints
-  function roundedPath(pts, r) {
-    if (pts.length === 2) return `M ${pts[0][0]} ${pts[0][1]} L ${pts[1][0]} ${pts[1][1]}`;
+  // geometry of an element relative to the stage
+  function rel(el) {
+    const a = el.getBoundingClientRect(), s = stage.getBoundingClientRect();
+    return {
+      l: a.left - s.left, t: a.top - s.top,
+      r: a.right - s.left, b: a.bottom - s.top,
+      cx: a.left - s.left + a.width / 2,
+      cy: a.top - s.top + a.height / 2,
+      w: a.width, h: a.height
+    };
+  }
+
+  // drop points that coincide with the previous one
+  function dedupe(pts) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const p = out[out.length - 1], q = pts[i];
+      if (Math.abs(p[0] - q[0]) > 0.5 || Math.abs(p[1] - q[1]) > 0.5) out.push(q);
+    }
+    return out;
+  }
+
+  // rounded orthogonal path through [x,y] waypoints
+  function roundedPath(raw, r) {
+    const pts = dedupe(raw);
+    if (pts.length <= 2) return `M ${pts[0][0]} ${pts[0][1]} L ${pts[pts.length-1][0]} ${pts[pts.length-1][1]}`;
     let d = `M ${pts[0][0]} ${pts[0][1]}`;
     for (let i = 1; i < pts.length - 1; i++) {
       const [px, py] = pts[i - 1], [cx, cy] = pts[i], [nx, ny] = pts[i + 1];
-      // trim point coming in
-      const inLen = Math.hypot(cx - px, cy - py);
+      const inLen = Math.hypot(cx - px, cy - py) || 1;
       const ri = Math.min(r, inLen / 2);
       const ix = cx - (cx - px) / inLen * ri, iy = cy - (cy - py) / inLen * ri;
-      // trim point going out
-      const outLen = Math.hypot(nx - cx, ny - cy);
+      const outLen = Math.hypot(nx - cx, ny - cy) || 1;
       const ro = Math.min(r, outLen / 2);
       const ox = cx + (nx - cx) / outLen * ro, oy = cy + (ny - cy) / outLen * ro;
-      d += ` L ${ix.toFixed(1)} ${iy.toFixed(1)} Q ${cx} ${cy} ${ox.toFixed(1)} ${oy.toFixed(1)}`;
+      d += ` L ${ix.toFixed(1)} ${iy.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ox.toFixed(1)} ${oy.toFixed(1)}`;
     }
     const last = pts[pts.length - 1];
-    d += ` L ${last[0]} ${last[1]}`;
+    d += ` L ${last[0].toFixed(1)} ${last[1].toFixed(1)}`;
     return d;
   }
 
-  const wrap = document.createElementNS(NS, "g");
-  svg.appendChild(wrap);
+  function mk(tag, attrs) {
+    const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
 
-  WIRES.forEach((w, i) => {
-    let pts;
-    if (w.side === "B") {
-      pts = [w.s, w.e];
-    } else {
-      const midX = w.s[0] + (w.e[0] - w.s[0]) * 0.45;
-      pts = [w.s, [midX, w.s[1]], [midX, w.e[1]], w.e];
+  // one connector: dim base + animated flow + glowing nodes at each end
+  function addWire(d, colour, startPt, endPt, delay, startR, endR) {
+    svg.appendChild(mk("path", { d, class: "wire-base" }));
+    const flow = mk("path", { d, pathLength: "100", class: "wire-flow " + colour });
+    flow.style.animationDelay = delay + "s";
+    svg.appendChild(flow);
+    if (endPt)   svg.appendChild(mk("circle", { cx: endPt[0],   cy: endPt[1],   r: endR   || 2.6, class: "node-end" }));
+    if (startPt) {
+      const n = mk("circle", { cx: startPt[0], cy: startPt[1], r: startR || 4.5, class: "node " + colour });
+      n.style.animationDelay = delay + "s";
+      svg.appendChild(n);
     }
-    const d = roundedPath(pts, 16);
+  }
 
-    const base = document.createElementNS(NS, "path");
-    base.setAttribute("d", d); base.setAttribute("class", "wire-base");
-    wrap.appendChild(base);
+  // evenly spaced port positions between lo and hi
+  function ports(n, lo, hi) {
+    if (n <= 1) return [(lo + hi) / 2];
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(lo + (hi - lo) * i / (n - 1));
+    return out;
+  }
 
-    const flow = document.createElementNS(NS, "path");
-    flow.setAttribute("d", d);
-    flow.setAttribute("pathLength", "100");
-    flow.setAttribute("class", "wire-flow " + w.colour);
-    flow.style.animationDelay = (-i * 0.42) + "s";
-    wrap.appendChild(flow);
+  function buildDesktop(b) {
+    const left = [], right = [], bottom = [], top = [];
+    pills.forEach(p => {
+      const r = rel(p);
+      r.colour = p.dataset.flow || "green";
+      if (r.cx < b.l)      left.push(r);
+      else if (r.cx > b.r) right.push(r);
+      else if (r.cy > b.cy) bottom.push(r);
+      else top.push(r);
+    });
+    const pad = 30;
 
-    // glowing node where the wire meets the pill
-    const n = document.createElementNS(NS, "circle");
-    n.setAttribute("cx", w.s[0]); n.setAttribute("cy", w.s[1]); n.setAttribute("r", "4");
-    n.setAttribute("class", "node " + w.colour);
-    n.style.animationDelay = (-i * 0.3) + "s";
-    wrap.appendChild(n);
+    left.sort((a, c) => a.cy - c.cy);
+    const lp = ports(left.length, b.t + pad, b.b - pad);
+    left.forEach((r, i) => {
+      const start = [r.r - 2, r.cy], end = [b.l, lp[i]];
+      const trunk = b.l - 34 - i * 16;
+      addWire(roundedPath([start, [trunk, start[1]], [trunk, end[1]], end], 14),
+              r.colour, start, end, -i * 0.5);
+    });
 
-    // small node where the wire meets the box
-    const n2 = document.createElementNS(NS, "circle");
-    n2.setAttribute("cx", w.e[0]); n2.setAttribute("cy", w.e[1]); n2.setAttribute("r", "2.4");
-    n2.setAttribute("class", "node-end");
-    wrap.appendChild(n2);
-  });
+    right.sort((a, c) => a.cy - c.cy);
+    const rp = ports(right.length, b.t + pad, b.b - pad);
+    right.forEach((r, i) => {
+      const start = [r.l + 2, r.cy], end = [b.r, rp[i]];
+      const trunk = b.r + 34 + i * 16;
+      addWire(roundedPath([start, [trunk, start[1]], [trunk, end[1]], end], 14),
+              r.colour, start, end, -i * 0.5 - 0.25);
+    });
+
+    bottom.sort((a, c) => a.cx - c.cx);
+    const bp = ports(bottom.length, b.l + b.w * 0.3, b.r - b.w * 0.3);
+    bottom.forEach((r, i) => {
+      const start = [r.cx, r.t + 2], end = [bp[i], b.b];
+      const midY = (start[1] + end[1]) / 2;
+      addWire(roundedPath([start, [start[0], midY], [end[0], midY], end], 14),
+              r.colour, start, end, -i * 0.5 - 0.4);
+    });
+
+    top.sort((a, c) => a.cx - c.cx);
+    const tp = ports(top.length, b.l + b.w * 0.3, b.r - b.w * 0.3);
+    top.forEach((r, i) => {
+      const start = [r.cx, r.b - 2], end = [tp[i], b.t];
+      const midY = (start[1] + end[1]) / 2;
+      addWire(roundedPath([start, [start[0], midY], [end[0], midY], end], 14),
+              r.colour, start, end, -i * 0.5 - 0.6);
+    });
+  }
+
+  function buildMobile(b) {
+    const spineX = b.cx;
+    let maxY = b.b;
+    const branches = pills.map(p => {
+      const r = rel(p);
+      maxY = Math.max(maxY, r.cy);
+      return { y: r.cy, innerX: r.cx < spineX ? r.r : r.l, colour: p.dataset.flow || "green" };
+    });
+
+    // central spine running down from the box
+    const spineD = `M ${spineX.toFixed(1)} ${b.b.toFixed(1)} L ${spineX.toFixed(1)} ${maxY.toFixed(1)}`;
+    svg.appendChild(mk("path", { d: spineD, class: "wire-base" }));
+    const spineFlow = mk("path", { d: spineD, pathLength: "100", class: "wire-flow green" });
+    spineFlow.style.animationDelay = "0s";
+    svg.appendChild(spineFlow);
+    const topNode = mk("circle", { cx: spineX, cy: b.b, r: 4.5, class: "node green" });
+    svg.appendChild(topNode);
+
+    // a branch taps off the spine to each pill
+    branches.forEach((br, i) => {
+      const d = `M ${spineX.toFixed(1)} ${br.y.toFixed(1)} L ${br.innerX.toFixed(1)} ${br.y.toFixed(1)}`;
+      svg.appendChild(mk("path", { d, class: "wire-base" }));
+      const flow = mk("path", { d, pathLength: "100", class: "wire-flow " + br.colour });
+      flow.style.animationDelay = (-i * 0.32) + "s";
+      svg.appendChild(flow);
+      svg.appendChild(mk("circle", { cx: spineX, cy: br.y, r: 2.4, class: "node-end" }));
+      const pn = mk("circle", { cx: br.innerX, cy: br.y, r: 4, class: "node " + br.colour });
+      pn.style.animationDelay = (-i * 0.32) + "s";
+      svg.appendChild(pn);
+    });
+  }
+
+  function build() {
+    const s = stage.getBoundingClientRect();
+    if (!s.width || !s.height) return;
+    svg.setAttribute("viewBox", `0 0 ${s.width.toFixed(1)} ${s.height.toFixed(1)}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.innerHTML = DEFS;
+    const b = rel(box);
+    if (window.matchMedia("(max-width: 880px)").matches) buildMobile(b);
+    else buildDesktop(b);
+  }
+
+  // (re)build at the right moments: now, after fonts settle, on resize
+  let raf = null;
+  function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(build); }
+  build();
+  window.addEventListener("resize", schedule);
+  window.addEventListener("orientationchange", schedule);
+  window.addEventListener("load", schedule);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
 })();
 
 
